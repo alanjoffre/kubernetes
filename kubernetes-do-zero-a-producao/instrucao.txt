@@ -328,6 +328,15 @@ Acesse pelo terminal do VSCODE, a pasta: fc2-terraform
 Digite o seguinte comando: terraform init
 
 Digite o seguinte comando: terraform apply
+Vai mandar as informações para Amazon
+Aguarde pois em alguns casos pode demorar alguns minutos
+Vai gerar um arquivo kubeconfig
+
+Para se comunicar com o servidor AWS
+Digite o seguinte comando: kub get nodes
+
+Copie o arquivo kubeconfig para kube/config
+Digite o seguinte comando: cp kubeconfig ~/.kube/config
 
 Crie um arquivo na pasta terraform: Dockerfile
 Copie as seguintes linhas no arquivo:
@@ -385,23 +394,72 @@ Digite o seguinte comando: kubectl get po
 Digite o seguinte comando: kubectl port-forward pod/goserver-867cc5d69d-47xtq 9090:9090
 _______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
+Service (ClusterIP, NodePort, LoadBalancer)
 
+Crie um arquivo dentro da pasta nginx: service.yaml
+Atualize com as seguintes linhas: 
 
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  selector:
+    app: nginx 
+  ports:
+  - port: 80
+    targetPort: 80
 
+Na pasta nginx execute o seguinte comando: kubectl apply -f service.yaml
 
+Digite o seguinte comando: kubectl get svc
 
+pasta nginx: service.yaml
+Atualize as seguintes linhas nginx: service.yaml
+ 
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: nginx 
+  ports:
+  - port: 80
+    targetPort: 80
 
+Digite o seguinte comando: kubectl apply -f service.yaml
 
+Digite o seguinte comando: kubectl get svc
 
+Faça uma cópia do arquivo nginx/service.yaml para goserver
+Atualize com as seguintes informações:
 
+apiVersion: v1
+kind: Service
+metadata:
+  name: goserver-service
+spec:
+  type: LoadBalancer
+  selector:
+    app: goserver
+  ports:
+  - port: 80
+    targetPort: 9090
 
+Digite o seguinte comando nno diretório goserver: kubectl apply -f service.yaml
 
+Digite o seguinte comando: kubectl get svc
+______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
+Digite o seguinte comando na raiz do projeto: kubectl apply -f goserver
 
+Digite o seguinte comando na raiz do projeto: kubectl get po
+O projeto estará rodando no AWS
 
-
-
-
-_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+Digite o seguinte comando na raiz do projeto: kubectl get svc
+Vai aparecer o link para acesso
+______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 Créditos: https://www.youtube.com/watch?v=oxWEVQP5_Rg
