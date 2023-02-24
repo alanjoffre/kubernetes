@@ -329,7 +329,7 @@ Digite o seguinte comando: terraform init
 
 Digite o seguinte comando: terraform apply
 
-Crie um arquivo na raiz do projeto: Dockerfile
+Crie um arquivo na pasta terraform: Dockerfile
 Copie as seguintes linhas no arquivo:
 
 FROM golang:1.18 as builder
@@ -343,7 +343,7 @@ FROM scratch
 COPY --from=builder /app/server .
 CMD ["./server"]
 
-Digite o seguinte comando na raiz do projeto: docker build -t goserver:latest .
+Digite o seguinte comando na pasta raiz do projeto: docker build -t goserver:latest .
 ### Não esqueça do '.' no final do comando
 
 Digite o seguinte comando: docker run -p 9090:9090 --rm goserver:latest
@@ -381,6 +381,9 @@ spec:
 
 Acesse o diretório goserver pelo terminal do VSCODE
 Digite o seguinte comando: kubectl apply -f deployment.yaml
+Digite o seguinte comando: kubectl get po
+Digite o seguinte comando: kubectl port-forward pod/goserver-867cc5d69d-47xtq 9090:9090
+_______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 
 
@@ -388,18 +391,6 @@ Digite o seguinte comando: kubectl apply -f deployment.yaml
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
 
 
 
