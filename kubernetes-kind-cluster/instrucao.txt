@@ -1,0 +1,149 @@
+# Como criar seu primeiro Cluster Kubernetes na pratica com Kind
+
+_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+## Instale o Docker desktop: https://docs.docker.com/desktop/install/windows-install/
+
+## Instale o Chocolatey - Gerenciador de pacotes (Windows)
+Digite o seguinte comando PowerShell: Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+## Instale o Kind: https://kind.sigs.k8s.io
+Digite o seguinte comando PowerShell: choco install kind
+
+## Instale o Kubectl e siga as seguintes etapas:
+Digite o seguinte comando PowerShell: choco install kubernetes-cli
+Digite o seguinte comando PowerShell: kubectl version --client
+Navegue até o seu diretório inicial: C:\
+Digite o seguinte comando PowerShell: mkdir .kube
+Digite o seguinte comando PowerShell: cd .kube
+Digite o seguinte comando PowerShell: New-Item config -type file
+
+_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+# Comandos Kind
+
+## criar-cluster-kind.sh
+kind create cluster --name demo-cluster
+kind get clusters
+kubectl config get-contexts
+
+## criando-app.sh
+kubectl apply -f ./9-deploy.yaml
+kubectl get pods
+kubectl logs deploy/api
+kubectl port-forward service/api 3000:80
+
+## usando-kubectl.sh
+kubectl get namespaces # ou kubectl get ns
+kubectl get pods -n kube-system
+
+## remover-cluster-kind.sh
+kind delete cluster --name demo-cluster
+
+_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+## Criando arquivo de configuração: Kind
+vim kind-3-nodes.yml
+
+## kind-3-nodes.yml
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+  - role: worker
+  - role: worker
+  - role: worker
+
+### Salve o arquivo vim:
+ESC para sair de INSERT
+Digite: ':wq'
+
+#### Procure o arquivo criado pelo VIM e adicione no diretório que está executando o código no PowerShell
+
+## criar-cluster-3
+kind create cluster --name demo-cluster-3 --config ./kind-3-nodes.yml
+kind get clusters
+kubectl config get-contexts
+kubectl get pods -n kube-system
+kubectl get nodes
+
+### Comando: kind get clusters
+
+#### Crie uma pasta: node-image
+
+## Crie um arquivo com o seguinte nome e código: index.mjs
+// Crie o arquivo package.json com o comando npm init -y
+import {createServer} from 'node:http'
+
+const server = createServer((r, rs) => {
+  rs.writeHead(200, { 'Content-Type': 'application/json' })
+  rs.end('Hello')
+})
+
+server.listen(process.env.PORT || 3000, () => console.log(`Server running on port ${process.env.PORT || 3000}`))
+
+## Crie um arquivo com o seguinte nome e código: Dockerfile
+FROM node:18-alpine
+EXPOSE 3000
+RUN mkdir /app
+WORKDIR /app
+
+COPY package.json index.mjs /app/
+
+ENTRYPOINT ["node", "index.mjs"]
+
+#### Acesse pelo PowerShell o diretório: node-image
+Digite: docker build -t hello-api .
+Digite: docker images
+
+## kind-load-image
+kind load docker-image hello-api --name demo-cluster-3
+
+## ## Crie um arquivo com o seguinte nome e código: deploy.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+spec:
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: hello-api
+          imagePullPolicy: IfNotPresent
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          ports:
+          - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: api
+spec:
+  selector:
+    app: api
+  ports:
+  - port: 80
+    targetPort: 3000
+
+## Digite o seguinte comando: kubectl apply -f ./deploy.yaml
+
+## Digite o seguinte comando: kubectl get pods
+
+## Digite o seguinte comando: kubectl logs deploy/api
+
+## Digite o seguinte comando: kubectl port-forward service/api 3000:80
+________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+Créditos: https://www.youtube.com/watch?v=dL19dSGKZoc
+
+
