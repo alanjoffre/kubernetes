@@ -1,0 +1,416 @@
+# Instrução:
+_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+Deployments >>> ReplicaSet >>> POD  >>> Container
+
+Deployments gerenciam ReplicaSet que gerenciam POD que gerenciam Container
+
+_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+No VSCODE, crie uma pasta para o seu projetos.
+
+Crie um arquivo: pod.yaml
+Digite o seguinte código para o arquivo criado:
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+    name: nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    ports:
+      - containerPort: 80
+_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+## Instale o Docker desktop: https://docs.docker.com/desktop/install/windows-install/
+
+## Instale o Chocolatey - Gerenciador de pacotes (Windows)
+Digite o seguinte comando PowerShell: Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+## Instale o Kind: https://kind.sigs.k8s.io
+Digite o seguinte comando PowerShell: choco install kind
+
+## Instale o Kubectl e siga as seguintes etapas:
+Digite o seguinte comando PowerShell: choco install kubernetes-cli
+Digite o seguinte comando PowerShell: kubectl version --client
+Navegue até o seu diretório inicial: C:\
+Digite o seguinte comando PowerShell: mkdir .kube
+Digite o seguinte comando PowerShell: cd .kube
+Digite o seguinte comando PowerShell: New-Item config -type file
+_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+Inicie o Doocker Desktop no seu PC.
+
+Volte para o VSCODE, acesse pelo terminal o diretório do seu projeto.
+
+Comando para criar um cluster Kubernetes.
+Digite o seguinte comando: kind create cluster --name=esquenta
+
+Digite o seguinte comando: kubectl cluster-info --context kind-esquenta
+
+Comando para verificar quais m´quinas estão rodando Kubernetes.
+Digite o seguinte comando: kubectl get nodes
+
+Comando para criar ou atualizar um pod no cluster Kubernetes.
+Digite o seguinte comando: kubectl apply -f pod.yaml
+
+Comando para verificar os pods criados.
+Digite o seguinte comando: kubectl get pods
+
+Comando usado para encaminhar (forward) uma porta local para um pod em execução no cluster Kubernetes.
+Digite o seguinte comando: kubectl port-forward pod/nginx 9090:80
+
+Comando para excluir um pod
+Digite o seguinte comando: kubectl delete pod nginx
+________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+ReplicaSet: gerenciar e escalonar conjuntos de réplicas de pods no Kubernetes, garantindo que o número correto de réplicas do pod
+esteja em execução em um determinado momento.
+
+Crie um novo arquivo no repositório do projeto: rs.yaml
+Digite o seguinte código para o arquivo criado:
+
+###IMPORTANTE
+para criar a estrutura do Replicaset, basta digitar no inicio do codigo: dep + enter
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: nginx
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+### ReplicaSet não é balanceador
+
+Comando para criar o ReplicaSet
+Digite o seguinte comando: kubectl apply -f rs.yaml
+
+Comando para listar os Pods
+Digite o seguinte comando: kubectl get po
+
+Comando para listar os ReplicaSets
+Digite o seguinte comando: kubectl get rs
+
+Comando para deletar o Pod
+Digite o seguinte comando: kubectl delete pod nginx-XXXX
+
+Por causa do ReplicaSet, foi criado outro Pod para a exclusão.
+Digite o seguinte comando: kubectl get po
+
+### ReplicaSet não gerencia mudanças
+
+Altere o arquivo: rs.yaml
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: caddy
+        ports:
+        - containerPort: 80
+
+Digite o seguinte comando: kubectl apply -f rs.yaml
+
+Digite o seguinte comando: kubectl get po
+
+Digite o seguinte comando: kubectl delete pod nginx-XXXX
+
+Digite o seguinte comando: kubectl get po
+
+Digite o seguinte comando: kubectl port-forward pod/nginx-YYYY 9090:80
+
+### Para mudar a imagem é necessário deletar os pods e montar novas ReplicaSet.
+
+### ReplicaSet só verifica a quantidade de replicas.
+
+Comando para listar os ReplicaSets
+Digite o seguinte comando: kubectl get rs
+
+Comando para deletar os ReplicaSets
+Digite o seguinte comando: kubectl delete rs nginx
+_______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+Faça uma cópia do arquivo pod.yaml
+Renomei a cópia para: deployment.yaml
+Com as seguintes linhas de código:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+
+Comando para criar o Deployment:
+Digite o seguinte comando: kubectl apply -f deployment.yaml
+
+Altere o arquivo para: deployment.yaml
+Com as seguintes linhas de código:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: caddy
+        ports:
+        - containerPort: 80
+
+Comando para atualizar o arquivo Deployment:
+Digite o seguinte comando: kubectl apply -f deployment.yaml
+
+Digite o seguinte comando: kubectl get rs
+
+Altere o arquivo para: deployment.yaml
+Com as seguintes linhas de código:
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+
+Comando para atualizar o arquivo Deployment:
+Digite o seguinte comando: kubectl apply -f deployment.yaml
+
+Digite o seguinte comando: kubectl get rs
+_______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+Baixe e instale o Go: https://go.dev
+
+Digite o seguinte comando: go mod init teste
+
+Crie um arquivo: main.go
+Adicione o seguinte código:
+
+package main
+
+import "net/http"
+
+func main() {
+	http.HandleFunc("/", hello)
+	http.ListenAndServe(":9090", nil)
+}
+
+func hello(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("Hello, World!"))
+}
+
+Digite o seguinte comando: go run main.go
+_______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+Baixe o TerraForm do repositorio do GitHub
+Digite o seguinte comando: git clone https://github.com/codeedu/fc2-terraform.git
+
+Acesse o arquivo: main.tf 
+Altere para as seguintes linhas
+
+terraform {
+    required_version = ">=0.13.1"
+    required_providers {
+      aws = ">=3.54.0"
+      local = ">=2.1.0"
+    }
+    #backend "s3" {
+    #  bucket = "myfcbucket"
+    #  key    = "terraform.tfstate"
+    #  region = "us-east-1"
+    #}
+}
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+module "new-vpc" {
+  source = "./modules/vpc"
+  prefix = var.prefix
+  vpc_cidr_block = var.vpc_cidr_block
+}
+
+module "eks" {
+    source = "./modules/eks"
+    prefix = var.prefix
+    vpc_id = module.new-vpc.vpc_id
+    cluster_name = var.cluster_name
+    retention_days = var.retention_days
+    subnet_ids = module.new-vpc.subnet_ids
+    desired_size = var.desired_size
+    max_size = var.max_size
+    min_size = var.min_size
+}
+_______________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+Acesse o arquivo: terraform.tfvars 
+Altere para as seguintes linhas:
+
+prefix = "fc"
+cluster_name = "esquenta"
+retention_days = 30
+desired_size = 2
+max_size = 4
+min_size = 2
+vpc_cidr_block = "10.0.0.0/16"
+
+
+Instale o Terraform pelo Chocolatey: choco install terraform
+
+Acesse pelo terminal do VSCODE, a pasta: fc2-terraform
+
+Digite o seguinte comando: terraform init
+
+Digite o seguinte comando: terraform apply
+
+Crie um arquivo na raiz do projeto: Dockerfile
+Copie as seguintes linhas no arquivo:
+
+FROM golang:1.18 as builder
+
+WORKDIR /app
+COPY main.go .
+COPY go.mod .
+RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o server main.go
+
+FROM scratch
+COPY --from=builder /app/server .
+CMD ["./server"]
+
+Digite o seguinte comando na raiz do projeto: docker build -t goserver:latest .
+### Não esqueça do '.' no final do comando
+
+Digite o seguinte comando: docker run -p 9090:9090 --rm goserver:latest
+
+Comando para subir a imagem para o docker
+Digite o seguinte comando: docker push goserver:latest
+
+Crie uma pasta: nginx
+Copie o arquivo: deployment para dentro da pasta nginx
+Exclua o arquivo: pod.yaml
+Crie uma pasta: goserver
+Faça uma cópia do arquivo: deployment para a pasta: goserver
+
+Atualize as linhas do arquivo: deployment da pasta: goserver
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: goserver
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: goserver
+  template:
+    metadata:
+      labels:
+        app: goserver
+    spec:
+      containers:
+      - name: goserver
+        image: goserver:latest
+        ports:
+        - containerPort: 9090
+
+Acesse o diretório goserver pelo terminal do VSCODE
+Digite o seguinte comando: kubectl apply -f deployment.yaml
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+
+
+
+
+
+
+
+
+
+
+_________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________________
+
+Créditos: https://www.youtube.com/watch?v=oxWEVQP5_Rg
